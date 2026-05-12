@@ -3,6 +3,7 @@
 import { Layout } from "@/components/layout/layout";
 import { AssessmentProvider } from "@/contexts/AssessmentContext";
 import { FloatingChat } from "@/components/assessment/floating-chat";
+import { SecurityProvider } from "@/components/layout/security-provider";
 
 export default function DashboardLayout({
   children,
@@ -11,10 +12,12 @@ export default function DashboardLayout({
 }) {
   return (
     <div data-theme="dashboard">
-      <AssessmentProvider>
-        <Layout>{children}</Layout>
-        <FloatingChat />
-      </AssessmentProvider>
+      <SecurityProvider>
+        <AssessmentProvider>
+          <Layout>{children}</Layout>
+          <FloatingChat />
+        </AssessmentProvider>
+      </SecurityProvider>
     </div>
   );
 }

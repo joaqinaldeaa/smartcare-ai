@@ -2,6 +2,7 @@
 
 import { Layout } from "@/components/layout/layout";
 import { AssessmentProvider } from "@/contexts/AssessmentContext";
+import { FloatingChat } from "@/components/assessment/floating-chat";
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default function DashboardLayout({
   return (
     <AssessmentProvider>
       <Layout>{children}</Layout>
+      <FloatingChat />
     </AssessmentProvider>
   );
 }

@@ -24,6 +24,7 @@ import { currentUser, getUnreadNotificationsCount } from "@/data/mock-data";
 import { getInitials } from "@/lib/utils";
 import { useTheme } from "@/lib/theme-provider";
 import { useLanguage } from "@/lib/i18n/context";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
@@ -121,6 +122,8 @@ export function Header({ onMobileMenuToggle, isMobileMenuOpen }: HeaderProps) {
           >
             <Plus className="h-5 w-5" />
           </motion.button>
+
+          <LanguageSwitcher />
 
           <button
             onClick={toggleTheme}

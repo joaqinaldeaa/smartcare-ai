@@ -106,7 +106,7 @@ export default function LoginPage() {
                 <button
                   key={option.code}
                   onClick={() => {
-                    setLang(option.code as "en" | "id" | "fil");
+                    setLang(option.code as "en" | "id" | "fil" | "ms" | "th" | "vi");
                     setShowLangMenu(false);
                   }}
                   className={cn(

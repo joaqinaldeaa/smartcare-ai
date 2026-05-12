@@ -21,9 +21,9 @@ function RiskGauge({ level }: { level: RiskLevel }) {
   }, []);
 
   const riskColors: Record<RiskLevel, { color: string; bg: string; textColor: string; label: string }> = {
-    low: { color: "#10B981", bg: "#D1FAE5", textColor: "#065F46", label: "Risiko Rendah" },
-    medium: { color: "#F59E0B", bg: "#FEF3C7", textColor: "#92400E", label: "Risiko Sedang" },
-    high: { color: "#EF4444", bg: "#FEE2E2", textColor: "#991B1B", label: "Risiko Tinggi" },
+    low: { color: "#007a3d", bg: "#c4f0d4", textColor: "#00331d", label: "Risiko Rendah" },
+    medium: { color: "#7c5700", bg: "#ffecb8", textColor: "#3d2c00", label: "Risiko Sedang" },
+    high: { color: "#ba1a1a", bg: "#ffdad6", textColor: "#410002", label: "Risiko Tinggi" },
   };
 
   const risk = riskColors[level];
@@ -48,12 +48,12 @@ function RiskGauge({ level }: { level: RiskLevel }) {
 
   return (
     <div className="text-center">
-      <p className="text-sm text-[#6B7280] mb-4">Tingkat Risiko</p>
+      <p className="text-sm text-[#6e7979] mb-4">Tingkat Risiko</p>
       <div className="relative inline-block">
         <svg width="240" height="140" viewBox="0 0 240 160">
-          <path d={arcPath(-180, -120)} stroke="#D1FAE5" strokeWidth="12" fill="none" strokeLinecap="round" />
-          <path d={arcPath(-120, -60)} stroke="#FEF3C7" strokeWidth="12" fill="none" strokeLinecap="round" />
-          <path d={arcPath(-60, 0)} stroke="#FEE2E2" strokeWidth="12" fill="none" strokeLinecap="round" />
+          <path d={arcPath(-180, -120)} stroke="#c4f0d4" strokeWidth="12" fill="none" strokeLinecap="round" />
+          <path d={arcPath(-120, -60)} stroke="#ffecb8" strokeWidth="12" fill="none" strokeLinecap="round" />
+          <path d={arcPath(-60, 0)} stroke="#ffdad6" strokeWidth="12" fill="none" strokeLinecap="round" />
           <line
             x1={CX} y1={CY}
             x2={needleTip.x} y2={needleTip.y}
@@ -69,9 +69,9 @@ function RiskGauge({ level }: { level: RiskLevel }) {
           <circle cx={CX} cy={CY} r={6} fill={risk.color} />
         </svg>
         <div className="flex justify-between px-4 mt-1">
-          <span className="text-xs text-[#10B981] font-medium">Rendah</span>
-          <span className="text-xs text-[#F59E0B] font-medium">Sedang</span>
-          <span className="text-xs text-[#EF4444] font-medium">Tinggi</span>
+          <span className="text-xs text-[#007a3d] font-medium">Rendah</span>
+          <span className="text-xs text-[#7c5700] font-medium">Sedang</span>
+          <span className="text-xs text-[#ba1a1a] font-medium">Tinggi</span>
         </div>
       </div>
       <motion.div
@@ -91,26 +91,26 @@ function RiskGauge({ level }: { level: RiskLevel }) {
 // ─── Domain Score Card ───────────────────────────────────────────────────────
 
 const DOMAIN_META: Record<string, { color: string; bg: string; label: string; icon: string }> = {
-  A: { color: "from-[#FF8A65] to-[#FF7043]", bg: "bg-[#FFF0E8]", label: "Perhatian & Organisasi", icon: "🎯" },
-  B: { color: "from-[#FF7043] to-[#FF5722]", bg: "bg-[#FFF3E0]", label: "Hiperaktivitas & Impulsivitas", icon: "⚡" },
+  A: { color: "from-[#006767] to-[#0d8282]", bg: "bg-[#f3fffe]", label: "Perhatian & Organisasi", icon: "🎯" },
+  B: { color: "from-[#0d8282] to-[#006767]", bg: "bg-[#f3fffe]", label: "Hiperaktivitas & Impulsivitas", icon: "⚡" },
   C: { color: "from-[#26A69A] to-[#00897B]", bg: "bg-[#E0F2F1]", label: "Komunikasi & Sensori", icon: "🗣️" },
-  D: { color: "from-[#7C3AED] to-[#6D28D9]", bg: "bg-[#F5F3FF]", label: "Perkembangan Umum", icon: "📚" },
+  D: { color: "from-[#7d5539] to-[#6a472f]", bg: "bg-[#FFF3E0]", label: "Perkembangan Umum", icon: "📚" },
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  low: "text-[#10B981]",
-  moderate: "text-[#F59E0B]",
-  high: "text-[#EF4444]",
+  low: "text-[#007a3d]",
+  moderate: "text-[#7c5700]",
+  high: "text-[#ba1a1a]",
 };
 const LEVEL_BG: Record<string, string> = {
-  low: "bg-[#D1FAE5] text-[#065F46]",
-  moderate: "bg-[#FEF3C7] text-[#92400E]",
-  high: "bg-[#FEE2E2] text-[#991B1B]",
+  low: "bg-[#c4f0d4] text-[#00331d]",
+  moderate: "bg-[#ffecb8] text-[#3d2c00]",
+  high: "bg-[#ffdad6] text-[#410002]",
 };
 const LEVEL_BAR: Record<string, string> = {
-  low: "bg-[#10B981]",
-  moderate: "bg-[#F59E0B]",
-  high: "bg-[#EF4444]",
+  low: "bg-[#007a3d]",
+  moderate: "bg-[#7c5700]",
+  high: "bg-[#ba1a1a]",
 };
 
 function DomainCard({ domain, score, maxScore, level, index }: { domain: string; score: number; maxScore: number; level: string; index: number }) {
@@ -122,7 +122,7 @@ function DomainCard({ domain, score, maxScore, level, index }: { domain: string;
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5 + index * 0.12 }}
-      className="bg-white rounded-2xl p-4 border border-[#FFE0B2] shadow-sm"
+      className="bg-white rounded-2xl p-4 border border-[#d8e4ed] shadow-sm"
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -130,15 +130,15 @@ function DomainCard({ domain, score, maxScore, level, index }: { domain: string;
             <span className="text-white text-sm">{meta.icon}</span>
           </div>
           <div>
-            <p className="text-sm font-bold text-[#1E1B4B]">{meta.label}</p>
-            <p className="text-xs text-[#6B7280]">Domain {domain} · {score}/{maxScore}</p>
+            <p className="text-sm font-bold text-[#111d24]">{meta.label}</p>
+            <p className="text-xs text-[#6e7979]">Domain {domain} · {score}/{maxScore}</p>
           </div>
         </div>
         <span className={`text-xs font-bold px-2 py-1 rounded-full ${LEVEL_BG[level] || LEVEL_BG.low}`}>
           {level === "low" ? "Rendah" : level === "moderate" ? "Sedang" : "Tinggi"}
         </span>
       </div>
-      <div className="h-2 rounded-full bg-[#F0F0F0] overflow-hidden mb-1">
+      <div className="h-2 rounded-full bg-[#d8e4ed] overflow-hidden mb-1">
         <motion.div
           className={`h-full rounded-full ${LEVEL_BAR[level] || LEVEL_BAR.low}`}
           initial={{ width: 0 }}
@@ -146,7 +146,7 @@ function DomainCard({ domain, score, maxScore, level, index }: { domain: string;
           transition={{ duration: 0.8, delay: 0.7 + index * 0.12, ease: [0.16, 1, 0.3, 1] }}
         />
       </div>
-      <p className="text-right text-xs text-[#6B7280]">{pct}%</p>
+      <p className="text-right text-xs text-[#6e7979]">{pct}%</p>
     </motion.div>
   );
 }
@@ -161,15 +161,15 @@ function RecommendationCard({ text, risk }: { text: string; risk: string }) {
       animate={{ opacity: 1 }}
       transition={{ delay: 1.1 }}
       className={`rounded-2xl p-4 flex gap-3 border ${
-        isHigh ? "bg-[#FEE2E2] border-[#FCA5A5]" : "bg-[#FEF7F0] border-[#FFE0B2]"
+        isHigh ? "bg-[#ffdad6] border-[#ffb4ab]" : "bg-[#f3fffe] border-[#94f2f2]"
       }`}
     >
-      <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isHigh ? "text-[#EF4444]" : "text-[#FF8A65]"}`} />
+      <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isHigh ? "text-[#ba1a1a]" : "text-[#006767]"}`} />
       <div>
-        <p className={`text-sm font-bold mb-1 ${isHigh ? "text-[#991B1B]" : "text-[#3E2723]"}`}>
+        <p className={`text-sm font-bold mb-1 ${isHigh ? "text-[#410002]" : "text-[#111d24]"}`}>
           {isHigh ? "Rekomendasi Tinggi" : "Rekomendasi"}
         </p>
-        <p className="text-xs text-[#6B7280] leading-relaxed">{text}</p>
+        <p className="text-xs text-[#6e7979] leading-relaxed">{text}</p>
       </div>
     </motion.div>
   );
@@ -215,34 +215,34 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FEF7F0] to-[#FFF0E8] py-8 px-4">
+    <div className="min-h-screen bg-[#f5faff] py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/" className="p-2 rounded-xl hover:bg-white/60 transition-colors">
-            <ArrowLeft className="w-5 h-5 text-[#8D6E63]" />
+          <Link href="/" className="p-2 rounded-xl hover:bg-[#f3fffe] transition-colors">
+            <ArrowLeft className="w-5 h-5 text-[#3e4949]" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-[#3E2723]">Hasil Assessment</h1>
+            <h1 className="text-xl font-bold text-[#111d24]">Hasil Assessment</h1>
           </div>
-          <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFF0E8] border border-[#FFE0B2]">
-            <BrainCircuit className="w-4 h-4 text-[#FF8A65]" />
-            <span className="text-xs font-medium text-[#8D6E63]">AI Analysis</span>
+          <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f3fffe] border border-[#94f2f2]">
+            <BrainCircuit className="w-4 h-4 text-[#006767]" />
+            <span className="text-xs font-medium text-[#006767]">AI Analysis</span>
           </div>
         </div>
 
         <div id="results-container">
           {/* Main card */}
-          <div className="bg-white rounded-3xl shadow-lg p-6 mb-4 border border-[#FFE0B2]">
+          <div className="bg-white rounded-3xl shadow-[0_8px_32px_rgba(0,103,103,0.08)] p-6 mb-4 border border-[#d8e4ed]">
             <div className="text-center mb-6">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D1FAE5] text-[#065F46] text-xs font-medium mb-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c4f0d4] text-[#00331d] text-xs font-medium mb-3">
                 <CheckCircle className="w-3.5 h-3.5" />
                 Hasil Assessment
               </span>
             </div>
 
             <RiskGauge level={displayRisk} />
-            <div className="my-6 border-t border-[#FFE0B2]" />
+            <div className="my-6 border-t border-[#d8e4ed]" />
 
             {/* Domain Score Cards */}
             {scoreResult ? (
@@ -275,11 +275,11 @@ export default function ResultsPage() {
           </div>
 
           {/* Disclaimer */}
-          <div className="bg-[#FEF3C7] border border-[#FCD34D] rounded-2xl p-4 flex gap-3 mb-4">
-            <AlertTriangle className="w-5 h-5 text-[#92400E] flex-shrink-0 mt-0.5" />
+          <div className="bg-[#ffecb8] border border-[#fcd34d] rounded-2xl p-4 flex gap-3 mb-4">
+            <AlertTriangle className="w-5 h-5 text-[#7c5700] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-bold text-[#92400E] mb-1">Catatan Penting</p>
-              <p className="text-xs text-[#6B7280] leading-relaxed">
+              <p className="text-sm font-bold text-[#3d2c00] mb-1">Catatan Penting</p>
+              <p className="text-xs text-[#6e7979] leading-relaxed">
                 Hasil ini BUKAN diagnosis medis resmi. Harap gunakan laporan ini sebagai rujukan awal untuk berkonsultasi dengan Dokter Spesialis Anak atau Psikolog.
               </p>
             </div>
@@ -291,13 +291,13 @@ export default function ResultsPage() {
           <Button
             onClick={handlePDF}
             loading={pdfLoading}
-            className="w-full bg-gradient-to-r from-[#FF8A65] to-[#FF7043] hover:from-[#FF7043] hover:to-[#FF5722] text-white shadow-md"
+            className="w-full bg-gradient-to-r from-[#006767] to-[#0d8282] hover:from-[#004d4d] hover:to-[#006767] text-white shadow-md"
           >
             <Download className="w-4 h-4" />
             {pdfLoading ? `Membuat PDF... ${pdfProgress}%` : "Unduh Laporan (PDF)"}
           </Button>
           <Link href="/">
-            <Button variant="secondary" className="w-full border-2 border-[#FFE0B2] text-[#8D6E63] hover:border-[#FF8A65]">
+            <Button variant="secondary" className="w-full border-2 border-[#d8e4ed] text-[#3e4949] hover:border-[#006767] hover:text-[#006767]">
               <ArrowLeft className="w-4 h-4" />
               Kembali ke Beranda
             </Button>

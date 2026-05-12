@@ -83,6 +83,7 @@ export const id: Record<string, any> = {
   // Assessment
   selectChild: "Pilih Anak",
   selectChildDesc: "Pilih anak yang akan dinilai",
+  questionnaire: "Kuesioner",
   aiInterview: "Wawancara AI",
   aiInterviewDesc: "Jawab pertanyaan tentang anak Anda",
   videoUpload: "Unggah Video",

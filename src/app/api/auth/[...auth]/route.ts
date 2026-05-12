@@ -34,16 +34,36 @@ export async function POST(request: NextRequest) {
 
     if (action === 'login') {
       const { email, password } = await request.json();
+
+      // Demo account shortcut — auto-creates demo user on first login
+      if (email === 'demo@smartcare.ai' && password === 'demo123') {
+        let user = await getUserByEmail(email);
+        if (!user) {
+          user = await createUser({ email, password, name: 'Demo Parent' });
+        }
+        const token = createSession(user.id);
+        const res = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
+        res.cookies.set('session', token, {
+          httpOnly: true,
+          secure: false, // Works on localhost HTTP
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+        return res;
+      }
+
       const user = await getUserByEmail(email);
       if (!user || !(await verifyPassword(password, user.passwordHash))) {
         return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
       }
       const token = createSession(user.id);
+      const isProd = process.env.NODE_ENV === 'production';
       const res = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
       res.cookies.set('session', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: false, // Allow localhost HTTP
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60,
         path: '/',
       });

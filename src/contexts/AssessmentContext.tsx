@@ -19,8 +19,9 @@ export interface ChildProfile {
   age: number;
   gender: 'male' | 'female' | 'other';
   dob: string; // ISO date string YYYY-MM-DD
-  speechDelay?: 'yes' | 'no' | 'unsure'; // NEW
-  familyHistory?: 'yes' | 'no' | 'unsure'; // NEW
+  speechDelay?: 'yes' | 'no' | 'unsure';
+  familyHistory?: 'yes' | 'no' | 'unsure';
+  retested?: boolean; // true = must re-enter name for new assessment
 }
 
 export interface QAPair {
