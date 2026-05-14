@@ -111,7 +111,7 @@ function ParentChildIllustration({ size = 90 }: { size?: number }) {
           <circle cx="65" cy="38" r="8" fill="#e8c49a"/>
           <path d="M55 70c0-5.5 4.5-10 10-10s10 4.5 10 10" fill="#0d8282"/>
           {/* Hair */}
-          <path d="M57 34c1.5-5 6-8 8-8s6.5 3 8 8" fill="#6a472f"/>
+          <path d="M57 34c1.5-5 6-8 8-8s6.5 3 8 8" fill="#004d4d"/>
           {/* Eyes */}
           <motion.circle cx="62" cy="37" r="1.2" fill="#2d1f14"
             animate={{ r: [1.2, 1.5, 1.2] }}
@@ -194,7 +194,7 @@ function BabyIllustration({ size = 64 }: { size?: number }) {
         <path d="M18 28c0-8 6-14 14-14s14 6 14 14" fill="#0d8282"/>
         <circle cx="32" cy="16" r="3" fill="#0d8282"/>
         {/* Eyes - closed happy crescents */}
-        <motion.path d="M26 30c0 0 1.5 2 3 2s3-2 3-2" stroke="#6a472f" strokeWidth="1.5" strokeLinecap="round" fill="none"
+        <motion.path d="M26 30c0 0 1.5 2 3 2s3-2 3-2" stroke="#004d4d" strokeWidth="1.5" strokeLinecap="round" fill="none"
           animate={{ d: ["M26 30c0 0 1.5 2 3 2s3-2 3-2", "M26 29c0 0 1.5 3 3 3s3-3 3-3", "M26 30c0 0 1.5 2 3 2s3-2 3-2"] }}
           transition={{ duration: 3, repeat: Infinity }}
         />

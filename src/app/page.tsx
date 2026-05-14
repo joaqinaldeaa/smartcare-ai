@@ -70,7 +70,7 @@ export default function HomePage() {
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -left-24 w-[600px] h-[600px] rounded-full opacity-30 animate-blob" style={{ background: "radial-gradient(circle, #006767 0%, transparent 70%)" }} />
         <div className="absolute top-1/3 -right-16 w-[500px] h-[500px] rounded-full opacity-20 animate-blob" style={{ background: "radial-gradient(circle, #0d8282 0%, transparent 70%)", animationDelay: "2s" }} />
-        <div className="absolute -bottom-24 left-1/4 w-[400px] h-[400px] rounded-full opacity-15 animate-blob" style={{ background: "radial-gradient(circle, #7d5539 0%, transparent 70%)", animationDelay: "4s" }} />
+        <div className="absolute -bottom-24 left-1/4 w-[400px] h-[400px] rounded-full opacity-15 animate-blob" style={{ background: "radial-gradient(circle, #006767 0%, transparent 70%)", animationDelay: "4s" }} />
       </div>
 
       {/* Nav */}
@@ -304,7 +304,7 @@ export default function HomePage() {
               >
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 shadow-md transition-shadow ${
                   f.accent === "teal" ? "bg-gradient-to-br from-[#006767] to-[#0d8282] text-white" :
-                  f.accent === "brown" ? "bg-gradient-to-br from-[#7d5539] to-[#6a472f] text-white" :
+                  f.accent === "brown" ? "bg-gradient-to-br from-[#006767] to-[#004d4d] text-white" :
                   "bg-gradient-to-br from-[#0d8282] to-[#006767] text-white"
                 }`}>
                   {f.icon}

@@ -73,14 +73,14 @@ export function FloatingChat() {
       {/* Floating trigger button */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-[#FF8A65] to-[#FF7043] shadow-xl flex items-center justify-center z-50 cursor-pointer border-0"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-[#006767] to-[#0d8282] shadow-xl flex items-center justify-center z-50 cursor-pointer border-0"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         title="Chat dengan AI Assistant"
       >
         <MessageCircle className="w-6 h-6 text-white" strokeWidth={2} />
         <motion.span
-          className="absolute inset-0 rounded-full border-2 border-[#FF8A65]"
+          className="absolute inset-0 rounded-full border-2 border-[#006767]"
           animate={{ scale: [1, 1.6], opacity: [0.7, 0] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
         />
@@ -94,11 +94,11 @@ export function FloatingChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-24 right-6 w-[380px] h-[520px] bg-white rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden border border-[#FFE0B2]"
+            className="fixed bottom-24 right-6 w-[380px] h-[520px] bg-white rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden border border-[#94f2f2]"
             style={{ maxHeight: "calc(100vh - 120px)" }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#FF8A65] to-[#FF7043]">
+            <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#006767] to-[#0d8282]">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
                   <MessageCircle className="w-5 h-5 text-white" />
@@ -117,7 +117,7 @@ export function FloatingChat() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#FEF7F0]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f3fffe]">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -126,8 +126,8 @@ export function FloatingChat() {
                   <div
                     className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                       msg.role === "user"
-                        ? "bg-gradient-to-br from-[#FF8A65] to-[#FF7043] text-white rounded-br-sm"
-                        : "bg-white text-[#3E2723] rounded-bl-sm shadow-sm border border-[#FFE0B2]"
+                        ? "bg-gradient-to-br from-[#006767] to-[#0d8282] text-white rounded-br-sm"
+                        : "bg-white text-[#111d24] rounded-bl-sm shadow-sm border border-[#94f2f2]"
                     }`}
                   >
                     {msg.text}
@@ -136,12 +136,12 @@ export function FloatingChat() {
               ))}
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm border border-[#FFE0B2]">
+                  <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm border border-[#94f2f2]">
                     <div className="flex gap-1">
                       {[0, 150, 300].map((delay) => (
                         <span
                           key={delay}
-                          className="w-2 h-2 rounded-full bg-[#FF8A65] animate-bounce"
+                          className="w-2 h-2 rounded-full bg-[#006767] animate-bounce"
                           style={{ animationDelay: `${delay}ms` }}
                         />
                       ))}
@@ -158,7 +158,7 @@ export function FloatingChat() {
             </div>
 
             {/* Input */}
-            <div className="p-4 bg-white border-t border-[#FFE0B2]">
+            <div className="p-4 bg-white border-t border-[#94f2f2]">
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
@@ -172,14 +172,14 @@ export function FloatingChat() {
                   }}
                   placeholder="Ketik pertanyaan Anda..."
                   disabled={isTyping}
-                  className="flex-1 h-11 rounded-xl border-2 border-[#FFE0B2] bg-[#FEF7F0] px-4 text-sm text-[#3E2723] placeholder:text-[#8D6E63] focus:outline-none focus:border-[#FF8A65] transition-colors disabled:opacity-50"
+                  className="flex-1 h-11 rounded-xl border-2 border-[#94f2f2] bg-[#f3fffe] px-4 text-sm text-[#111d24] placeholder:text-[#3e4949] focus:outline-none focus:border-[#006767] transition-colors disabled:opacity-50"
                 />
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleSend}
                   disabled={isTyping || !input.trim()}
-                  className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF8A65] to-[#FF7043] flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#006767] to-[#0d8282] flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isTyping ? (
                     <Loader2 className="w-5 h-5 text-white animate-spin" />

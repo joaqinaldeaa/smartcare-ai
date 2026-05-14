@@ -34,7 +34,7 @@ const notifications = [
     desc: "Ingat untuk kontrol rutin setiap 3 bulan",
     time: "1 jam lalu",
     read: true,
-    color: "from-[#7d5539] to-[#6a472f]",
+    color: "from-[#006767] to-[#004d4d]",
     bg: "bg-[#FFF3E0]",
   },
   {

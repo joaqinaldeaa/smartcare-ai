@@ -34,7 +34,7 @@ const conversations = [
     name: "Psikolog Budi Santoso",
     role: "Konsultan",
     avatar: "BS",
-    avatarBg: "from-[#7d5539] to-[#6a472f]",
+    avatarBg: "from-[#006767] to-[#004d4d]",
     lastMessage: "Jadwal konsultasi telah dikonfirmasi",
     time: "2 hari lalu",
     unread: 0,

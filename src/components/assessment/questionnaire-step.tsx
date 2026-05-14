@@ -24,7 +24,7 @@ const OPTION_STYLES = [
   "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100",
 ];
 
-const OPTION_BG_EMPTY = "border-[#E5E7EB] bg-white text-[#1E1B4B] hover:border-[#FF8A65]/50";
+const OPTION_BG_EMPTY = "border-[#E5E7EB] bg-white text-[#1E1B4B] hover:border-[#006767]/50";
 
 export function QuestionnaireStep() {
   const { t, lang } = useLanguage();
@@ -84,14 +84,14 @@ export function QuestionnaireStep() {
       <div className="space-y-2">
         <div className="flex justify-between text-xs font-medium text-[#6B7280]">
           <div className="flex items-center gap-2">
-            <BrainCircuit className="w-3.5 h-3.5 text-[#FF8A65]" />
+            <BrainCircuit className="w-3.5 h-3.5 text-[#006767]" />
             <span>{domainLabel}</span>
           </div>
           <span>{answeredCount} / 20 answered</span>
         </div>
         <div className="h-2.5 rounded-full bg-[#F0F0F0] overflow-hidden">
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-[#FF8A65] to-[#FF7043]"
+            className="h-full rounded-full bg-gradient-to-r from-[#006767] to-[#0d8282]"
             initial={{ width: `${((currentQ) / 20) * 100}%` }}
             animate={{ width: `${progressPct}%` }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
@@ -106,15 +106,15 @@ export function QuestionnaireStep() {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -30 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-[#FEF7F0] rounded-2xl p-5 border border-[#FFE0B2]"
+        className="bg-[#f3fffe] rounded-2xl p-5 border border-[#94f2f2]"
       >
         <div className="flex items-center gap-2 mb-3">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF8A65] text-white text-xs font-bold">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#006767] text-white text-xs font-bold">
             {currentQ + 1}
           </span>
-          <span className="text-xs text-[#8D6E63] font-medium">Question {currentQ + 1} of 20</span>
+          <span className="text-xs text-[#3e4949] font-medium">Question {currentQ + 1} of 20</span>
         </div>
-        <h3 className="text-base font-semibold text-[#3E2723] leading-relaxed mb-5">
+        <h3 className="text-base font-semibold text-[#111d24] leading-relaxed mb-5">
           {questionText}
         </h3>
 
@@ -133,7 +133,7 @@ export function QuestionnaireStep() {
               }`}
             >
               <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-colors ${
-                selected === idx ? "bg-white/80" : "bg-[#F0F0F0] text-[#8D6E63]"
+                selected === idx ? "bg-white/80" : "bg-[#F0F0F0] text-[#3e4949]"
               }`}>
                 {String.fromCharCode(97 + idx)}
               </span>
@@ -148,7 +148,7 @@ export function QuestionnaireStep() {
         <Button
           variant="secondary"
           onClick={handlePrev}
-          className="flex-1 border-2 border-[#FFE0B2] text-[#8D6E63] hover:border-[#FF8A65] hover:text-[#FF8A65]"
+          className="flex-1 border-2 border-[#94f2f2] text-[#3e4949] hover:border-[#006767] hover:text-[#006767]"
         >
           <ChevronLeft className="w-4 h-4" />
           {currentQ === 0 ? t("back") : "Previous"}
@@ -156,7 +156,7 @@ export function QuestionnaireStep() {
         <Button
           onClick={handleNext}
           disabled={selected === -1}
-          className="flex-1 bg-gradient-to-r from-[#FF8A65] to-[#FF7043] hover:from-[#FF7043] hover:to-[#FF5722] text-white shadow-md"
+          className="flex-1 bg-gradient-to-r from-[#006767] to-[#0d8282] hover:from-[#0d8282] hover:to-[#FF5722] text-white shadow-md"
         >
           {isLast ? "Submit" : "Next"}
           {!isLast && <ChevronRight className="w-4 h-4" />}

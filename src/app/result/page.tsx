@@ -94,7 +94,7 @@ const DOMAIN_META: Record<string, { color: string; bg: string; label: string; ic
   A: { color: "from-[#006767] to-[#0d8282]", bg: "bg-[#f3fffe]", label: "Perhatian & Organisasi", icon: "🎯" },
   B: { color: "from-[#0d8282] to-[#006767]", bg: "bg-[#f3fffe]", label: "Hiperaktivitas & Impulsivitas", icon: "⚡" },
   C: { color: "from-[#26A69A] to-[#00897B]", bg: "bg-[#E0F2F1]", label: "Komunikasi & Sensori", icon: "🗣️" },
-  D: { color: "from-[#7d5539] to-[#6a472f]", bg: "bg-[#FFF3E0]", label: "Perkembangan Umum", icon: "📚" },
+  D: { color: "from-[#006767] to-[#004d4d]", bg: "bg-[#FFF3E0]", label: "Perkembangan Umum", icon: "📚" },
 };
 
 const LEVEL_COLORS: Record<string, string> = {

@@ -124,7 +124,7 @@ export default function HistoryPage() {
                     A: "#006767",
                     B: "#0d8282",
                     C: "#26A69A",
-                    D: "#7d5539",
+                    D: "#006767",
                   };
                   return (
                     <div key={domain} className="bg-[#f5faff] rounded-xl p-2.5 text-center">
