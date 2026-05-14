@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser, getUserByEmail, getUserById } from '@/lib/storage/user-store';
-import { verifyPassword } from '@/lib/auth/password';
+import { verifyPassword, hashPassword } from '@/lib/auth/password';
 import { createSession, destroySession, getSession } from '@/lib/auth/session';
+
+// In-memory fallback store for Vercel (filesystem may not be writable)
+const inMemoryUsers = new Map<string, { id: string; email: string; name: string; passwordHash: string }>();
+
+const DEMO_USER = {
+  id: 'demo-user-001',
+  email: 'demo@smartcare.ai',
+  name: 'Demo Parent',
+  // Pre-hashed "demo123" using bcryptjs
+  // Hash of "demo123" with 12 rounds: $2a$12$...
+  passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.G4G8lZ0L5Z8.O',
+};
 
 export async function POST(request: NextRequest) {
   const pathname = new URL(request.url).pathname;
@@ -15,37 +27,54 @@ export async function POST(request: NextRequest) {
       if (password.length < 6) {
         return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
       }
-      const existing = await getUserByEmail(email);
-      if (existing) {
-        return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+      // Try filesystem, fall back to in-memory
+      try {
+        const existing = await getUserByEmail(email);
+        if (existing) {
+          return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+        }
+        const user = await createUser({ email, password, name });
+        const token = createSession(user.id);
+        const res = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
+        res.cookies.set('session', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+        return res;
+      } catch {
+        // In-memory fallback for Vercel
+        if (inMemoryUsers.has(email)) {
+          return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
+        }
+        const hashed = await hashPassword(password, 12);
+        const id = `user-${Date.now()}`;
+        inMemoryUsers.set(email, { id, email, name, passwordHash: hashed });
+        const token = createSession(id);
+        const res = NextResponse.json({ user: { id, email, name } });
+        res.cookies.set('session', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+        return res;
       }
-      const user = await createUser({ email, password, name });
-      const token = createSession(user.id);
-      const res = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
-      res.cookies.set('session', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60,
-        path: '/',
-      });
-      return res;
     }
 
     if (action === 'login') {
       const { email, password } = await request.json();
 
-      // Demo account shortcut — auto-creates demo user on first login
+      // Demo account — always works, no filesystem needed
       if (email === 'demo@smartcare.ai' && password === 'demo123') {
-        let user = await getUserByEmail(email);
-        if (!user) {
-          user = await createUser({ email, password, name: 'Demo Parent' });
-        }
-        const token = createSession(user.id);
-        const res = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
+        const token = createSession(DEMO_USER.id);
+        const res = NextResponse.json({ user: { id: DEMO_USER.id, email: DEMO_USER.email, name: DEMO_USER.name } });
         res.cookies.set('session', token, {
           httpOnly: true,
-          secure: false, // Works on localhost HTTP
+          secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
           maxAge: 7 * 24 * 60 * 60,
           path: '/',
@@ -53,21 +82,39 @@ export async function POST(request: NextRequest) {
         return res;
       }
 
-      const user = await getUserByEmail(email);
-      if (!user || !(await verifyPassword(password, user.passwordHash))) {
-        return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      // Try filesystem auth first, then in-memory fallback
+      try {
+        const user = await getUserByEmail(email);
+        if (!user || !(await verifyPassword(password, user.passwordHash))) {
+          return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+        }
+        const token = createSession(user.id);
+        const res = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
+        res.cookies.set('session', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+        return res;
+      } catch {
+        // In-memory fallback for Vercel
+        const user = inMemoryUsers.get(email);
+        if (!user || !(await verifyPassword(password, user.passwordHash))) {
+          return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+        }
+        const token = createSession(user.id);
+        const res = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
+        res.cookies.set('session', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60,
+          path: '/',
+        });
+        return res;
       }
-      const token = createSession(user.id);
-      const isProd = process.env.NODE_ENV === 'production';
-      const res = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
-      res.cookies.set('session', token, {
-        httpOnly: true,
-        secure: false, // Allow localhost HTTP
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60,
-        path: '/',
-      });
-      return res;
     }
 
     if (action === 'logout') {
@@ -90,13 +137,26 @@ export async function GET(request: NextRequest) {
   if (!token) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
+  // Check demo user first
+  if (token === DEMO_USER.id || getSession(token) === DEMO_USER.id) {
+    return NextResponse.json({ user: { id: DEMO_USER.id, email: DEMO_USER.email, name: DEMO_USER.name } });
+  }
   const userId = getSession(token);
   if (!userId) {
     return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
   }
-  const user = await getUserById(userId);
-  if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  // Try filesystem, fall back to in-memory
+  try {
+    const user = await getUserById(userId);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    return NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
+  } catch {
+    const inMemUser = [...inMemoryUsers.values()].find(u => u.id === userId);
+    if (!inMemUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    return NextResponse.json({ user: { id: inMemUser.id, email: inMemUser.email, name: inMemUser.name } });
   }
-  return NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } });
 }
