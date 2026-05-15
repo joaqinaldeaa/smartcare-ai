@@ -244,9 +244,10 @@ export const QUESTIONS: Question[] = [
     options: ANSWER_LABELS,
     points: [0, 1, 2, 3],
   },
+// ─── Domain D — Sensory & Repetitive Behavior (Q17-19) ─────────────────────
   {
     id: 17,
-    domain: 'C',
+    domain: 'D',
     text: {
       id: 'Bagaimana kekerapan anak melakukan gerakan berulang atau menggunakan frasa berulang?',
       en: 'How often does the child engage in repetitive movements or use repetitive phrases?',
@@ -260,7 +261,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 18,
-    domain: 'C',
+    domain: 'D',
     text: {
       id: 'Bagaimana kekerapan anak berdegil pada rutin dan marah dengan perubahan?',
       en: 'How often does the child insist on sameness in routines and get upset with changes?',
@@ -274,7 +275,7 @@ export const QUESTIONS: Question[] = [
   },
   {
     id: 19,
-    domain: 'C',
+    domain: 'D',
     text: {
       id: 'Bagaimana kekerapan anak menunjukkan tindak balas yang luar biasa terhadap pengalaman deria (bunyi, tekstur, cahaya)?',
       en: 'How often does the child show unusual reactions to sensory experiences (noises, textures, lights)?',
@@ -287,10 +288,10 @@ export const QUESTIONS: Question[] = [
     points: [0, 1, 2, 3],
   },
 
-  // ─── Domain D — General Development (Q20) ──────────────────────────────────
+  // ─── Domain E — General Development (Q20) ──────────────────────────────────
   {
     id: 20,
-    domain: 'D',
+    domain: 'E',
     text: {
       id: 'Bagaimana kekerapan anak menghadapi masalah mempelajari kemahiran baharu atau mengingat Arahan berbanding rakan sebaya yang sama umur?',
       en: 'How often does the child struggle to learn new skills or remember instructions compared to peers of the same age?',
