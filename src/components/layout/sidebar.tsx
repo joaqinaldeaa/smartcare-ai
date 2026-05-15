@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   PlusCircle,
@@ -182,6 +182,7 @@ function SupportIllustration() {
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { t } = useLanguage();
+  const router = useRouter();
 
   return (
     <motion.aside
@@ -402,7 +403,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => {
                   sessionStorage.removeItem("smartcare-user");
-                  window.location.href = "/login";
+                  router.push("/login");
                 }}
                 className="p-2 rounded-xl hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
               >

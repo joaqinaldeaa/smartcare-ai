@@ -25,7 +25,6 @@ export default function LoginPage() {
   const [showLangMenu, setShowLangMenu] = useState(false);
 
   const handleDemoLogin = async () => {
-    console.log('[Login] Demo button clicked — attempting demo login');
     setIsLoading(true);
     try {
       const res = await fetch('/api/auth/login', {
@@ -35,7 +34,6 @@ export default function LoginPage() {
         body: JSON.stringify({ email: 'demo@smartcare.ai', password: 'demo123' }),
       });
       const data = await res.json();
-      console.log('[Login] Demo response:', res.status, data);
 
       if (!res.ok) {
         alert(data.error || 'Demo login failed. Please try again.');
@@ -60,8 +58,6 @@ export default function LoginPage() {
       const passwordInput = form.elements.namedItem('password') as HTMLInputElement;
       const email = emailInput?.value;
       const password = passwordInput?.value;
-      console.log('[Login] Submitting login for:', email);
-
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,7 +65,6 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      console.log('[Login] Response:', res.status, data);
 
       if (!res.ok) {
         alert(data.error || 'Login failed. Please try again.');

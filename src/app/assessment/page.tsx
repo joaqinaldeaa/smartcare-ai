@@ -231,6 +231,11 @@ function VideoUploadStep() {
     setPreview(URL.createObjectURL(f));
   }
 
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => { if (preview) URL.revokeObjectURL(preview); };
+  }, [preview]);
+
   async function simulateUpload() {
     setUploading(true);
     setProgress(0);
@@ -383,6 +388,7 @@ const ANALYSIS_STEPS = [
 function AnalysisStep() {
   const { t, lang } = useLanguage();
   const { setStep, completeAssessment, answers, selectedChild } = useAssessment();
+  const router = useRouter();
   const [visibleSteps, setVisibleSteps] = useState(0);
 
   // Animate steps appearing
@@ -426,7 +432,7 @@ function AnalysisStep() {
           };
           const displayRisk = riskMap[result.overallRisk] || "medium";
           completeAssessment([], displayRisk);
-          window.location.href = "/result";
+          router.push("/result");
           return;
         } catch (e) {
           console.error("Scoring error:", e);
@@ -437,7 +443,7 @@ function AnalysisStep() {
       const risks: Array<"low" | "medium" | "high"> = ["low", "medium", "high"];
       const risk = risks[Math.floor(Math.random() * risks.length)];
       completeAssessment([], risk);
-      window.location.href = "/result";
+      router.push("/result");
     }, 7000);
   }, [completeAssessment, answers, lang]);
 

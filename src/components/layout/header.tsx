@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -33,6 +33,7 @@ interface HeaderProps {
 
 export function Header({ onMobileMenuToggle, isMobileMenuOpen }: HeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [showNotifications, setShowNotifications] = React.useState(false);
@@ -117,7 +118,7 @@ export function Header({ onMobileMenuToggle, isMobileMenuOpen }: HeaderProps) {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => window.location.href = "/assessment"}
+            onClick={() => router.push("/assessment")}
             className="md:hidden flex items-center justify-center h-10 w-10 rounded-xl bg-primary text-white cursor-pointer shadow-md"
           >
             <Plus className="h-5 w-5" />
@@ -268,7 +269,7 @@ export function Header({ onMobileMenuToggle, isMobileMenuOpen }: HeaderProps) {
                     <button
                       onClick={() => {
                         sessionStorage.removeItem("smartcare-user");
-                        window.location.href = "/login";
+                        router.push("/login");
                       }}
                       className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-error/10 text-error transition-colors cursor-pointer w-full"
                     >

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Baby,
@@ -28,6 +28,7 @@ interface MobileNavProps {
 
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useLanguage();
 
   const navItems = [
@@ -152,7 +153,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
               <button
                 onClick={() => {
                   sessionStorage.removeItem("smartcare-user");
-                  window.location.href = "/login";
+                  router.push("/login");
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-error hover:bg-error/10 transition-colors cursor-pointer"
               >

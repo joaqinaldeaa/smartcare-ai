@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { LayoutDashboard, Baby, PlusCircle, FileText, MessageSquare, Activity, Settings, Bell, HelpCircle, Shield, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/context";
@@ -13,6 +14,7 @@ interface PageShellProps {
 }
 
 export function PageShell({ title, subtitle, children, badge }: PageShellProps) {
+  const router = useRouter();
   const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -95,7 +97,7 @@ export function PageShell({ title, subtitle, children, badge }: PageShellProps) 
             )}
             {!collapsed && (
               <button
-                onClick={() => { sessionStorage.removeItem("smartcare-user"); window.location.href = "/login"; }}
+                onClick={() => { sessionStorage.removeItem("smartcare-user"); router.push("/login"); }}
                 className="p-1.5 rounded-lg hover:bg-error/10 text-text-muted hover:text-error transition-colors"
               >
                 <LogOut className="h-4 w-4" />

@@ -51,7 +51,6 @@ export default function RegisterPage() {
     if (!validateParent()) return;
     setLoading(true);
     try {
-      console.log('[Register] Submitting parent registration');
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,7 +58,6 @@ export default function RegisterPage() {
         body: JSON.stringify({ name: parentName, email, password }),
       });
       const data = await res.json();
-      console.log('[Register] Response:', res.status, data);
       if (!res.ok) {
         alert(data.error || 'Registration failed. Please try again.');
         setLoading(false);

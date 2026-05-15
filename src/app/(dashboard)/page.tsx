@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/context";
 import { useAssessment } from "@/contexts/AssessmentContext";
-import { getChildrenFromStorage } from "@/hooks/useChildren";
+import { getChildrenFromStorage, addChildToStorage } from "@/hooks/useChildren";
 import type { ChildProfile } from "@/contexts/AssessmentContext";
 
 // ─── Kid-Friendly Animated SVG Illustrations ──────────────────────────────────
@@ -236,7 +236,6 @@ export default function DashboardPage() {
 
   const addChild = () => {
     if (!newName.trim() || !newAge) return;
-    const { addChildToStorage } = require("@/hooks/useChildren");
     addChildToStorage({ name: newName, age: parseInt(newAge), gender: "male" as const, dob: "", retested: false });
     setChildren(getChildrenFromStorage().filter(c => !c.retested));
     setNewName("");
