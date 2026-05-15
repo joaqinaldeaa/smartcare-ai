@@ -5,10 +5,10 @@
 
 export interface Question {
   id: number;
-  domain: 'A' | 'B' | 'C' | 'D';
-  text: Record<string, string>; // { id, en, ms, th, vi, fil }
-  options: readonly string[];     // ['Never', 'Rarely', 'Sometimes', 'Often']
-  points: readonly number[];     // [0, 1, 2, 3]
+  domain: 'A' | 'B' | 'C' | 'D' | 'E';
+  text: Record<string, string>;
+  options: readonly string[];
+  points: readonly number[];
 }
 
 /** Answer value → label */

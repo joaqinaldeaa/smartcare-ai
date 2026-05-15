@@ -1,26 +1,20 @@
 /**
- * SmartCareAI v2 — Scoring Engine
- * Rule-based calculation from parent/teacher answers
+ * SmartCareAI v3 — Scoring Engine (per spec doc)
+ * 5 domains, percentage scoring, combined ADHD+ASD, 7-level classification
  */
 
-import { QUESTIONS, ANSWER_LABELS } from './questions';
+import type { ChildProfile } from '@/contexts/AssessmentContext';
 
 // ─── Domain config ─────────────────────────────────────────────────────────────
 
-interface DomainConfig {
-  id: 'A' | 'B' | 'C' | 'D';
+export interface DomainConfig {
+  id: 'A' | 'B' | 'C' | 'D' | 'E';
   name: Record<string, string>;
-  questionIds: number[];     // 1-based question IDs in this domain
+  questionIds: number[]; // 1-based
   maxScore: number;
-  lowThreshold: number;
-  moderateThreshold: number;
-  /** If "Often" (value=3) appears this many times → auto-flag High regardless of sum */
-  oftenFloor?: number;
-  /** Strict mode: all questions in this domain must score ≥ this to flag High */
-  minPerQuestion?: number;
 }
 
-const DOMAIN_CONFIGS: DomainConfig[] = [
+export const DOMAIN_CONFIGS: DomainConfig[] = [
   {
     id: 'A',
     name: {
@@ -33,9 +27,6 @@ const DOMAIN_CONFIGS: DomainConfig[] = [
     },
     questionIds: [1, 2, 3, 4, 5, 6],
     maxScore: 18,
-    lowThreshold: 6,
-    moderateThreshold: 11,
-    oftenFloor: 4, // 4 or more "Often" answers → High
   },
   {
     id: 'B',
@@ -49,30 +40,35 @@ const DOMAIN_CONFIGS: DomainConfig[] = [
     },
     questionIds: [7, 8, 9, 10, 11, 12, 13],
     maxScore: 21,
-    lowThreshold: 7,
-    moderateThreshold: 13,
-    oftenFloor: 4,
   },
   {
     id: 'C',
     name: {
-      id: 'Komunikasi Sosial & Deria',
-      en: 'Social Communication & Sensory',
-      ms: 'Komunikasi Sosial & Deria',
-      th: 'การสื่อสารทางสังคมและประสาทสัมผัส',
-      vi: 'Giao tiếp xã hội & Giác quan',
-      fil: 'Panlipunang Komunikasyon at Sensory',
+      id: 'Komunikasi Sosial',
+      en: 'Social Communication',
+      ms: 'Komunikasi Sosial',
+      th: 'การสื่อสารทางสังคม',
+      vi: 'Giao tiếp xã hội',
+      fil: 'Panlipunang Komunikasyon',
     },
-    // Q14-16 only (3 questions, max=9) — per spec: all 3 ≥2 → High
-  questionIds: [14, 15, 16],
-  maxScore: 9,
-  lowThreshold: 3,
-  moderateThreshold: 6,
-  // "all 3 scored ≥2" override
-  minPerQuestion: 2,
+    questionIds: [14, 15, 16],
+    maxScore: 9,
   },
   {
     id: 'D',
+    name: {
+      id: 'Sensori & Perilaku Berulang',
+      en: 'Sensory & Repetitive Behavior',
+      ms: 'Sensori & Perilaku Berulang',
+      th: 'ประสาทสัมผัสและพฤติกรรมซ้ำ',
+      vi: 'Giác quan & Hành vi lặp lại',
+      fil: 'Sensory at Paulit-ulit na Pag-uugali',
+    },
+    questionIds: [17, 18, 19],
+    maxScore: 9,
+  },
+  {
+    id: 'E',
     name: {
       id: 'Perkembangan Umum',
       en: 'General Development',
@@ -81,11 +77,8 @@ const DOMAIN_CONFIGS: DomainConfig[] = [
       vi: 'Phát triển chung',
       fil: 'Pangkalahatang Pag-unlad',
     },
-    // Q17-19 (sensory/repetitive) + Q20 (learning delay); Q20 handled standalone in overall risk
-    questionIds: [17, 18, 19],
-    maxScore: 9,
-    lowThreshold: 3,
-    moderateThreshold: 6,
+    questionIds: [20],
+    maxScore: 3,
   },
 ];
 
@@ -94,241 +87,292 @@ const DOMAIN_CONFIGS: DomainConfig[] = [
 export type DomainLevel = 'low' | 'moderate' | 'high';
 
 export interface DomainScore {
-  domain: 'A' | 'B' | 'C' | 'D';
+  domain: 'A' | 'B' | 'C' | 'D' | 'E';
   domainName: string;
   score: number;
   maxScore: number;
+  percentage: number;
   level: DomainLevel;
-  /** Indices into the answers array (0-based) — corresponds to question IDs */
   questionIndices: number[];
 }
 
-export type OverallRisk =
+export type OverallClassification =
   | 'low_overall'
-  | 'adhd_learning'
-  | 'asd_spectrum'
-  | 'mixed_both'
-  | 'high_concern';
+  | 'moderate_adhd'
+  | 'moderate_asd'
+  | 'mixed_moderate'
+  | 'high_adhd'
+  | 'high_asd'
+  | 'mixed_high'
+  | 'urgent_concern';
+
+export interface VideoAnalysisResult {
+  adhdScore: number;       // 0-100
+  asdScore: number;        // 0-100
+  adhdObservations: string[];
+  asdObservations: string[];
+}
+
+export interface AIObservation {
+  category: string;
+  icon: string;
+  observation: string;
+}
 
 export interface ScoreResult {
   domainScores: DomainScore[];
-  overallRisk: OverallRisk;
+  adhdInattentionPct: number;
+  adhdHyperactivityPct: number;
+  asdSocialPct: number;
+  asdSensoryPct: number;
+  generalDevPct: number;
+  overallAdhdPct: number;
+  overallAsdPct: number;
+  finalAdhdPct: number;
+  finalAsdPct: number;
+  overallClassification: OverallClassification;
   recommendationKey: string;
   recommendationText: string;
-  /** Q20 answer value */
+  specialistsText: string;
+  aiObservations: AIObservation[];
   devScore: number;
+  childProfile: ChildProfile | null;
+  videoAnalysis: VideoAnalysisResult | null;
 }
 
-// ─── Recommendation copy ───────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const RECOMMENDATIONS: Record<OverallRisk, Record<string, string>> = {
-  low_overall: {
-    id: 'Tumbuhan anak berkembang baik dalam semua domain. Lanjutkan pemantauan berkala.',
-    en: 'Child is developing well across all domains. Continue routine monitoring.',
-    ms: 'Kanak-kanak berkembang dengan baik dalam semua domain. Teruskan pemantauan berkala.',
-    th: 'เด็กพัฒนาได้ดีในทุกด้าน ควรติดตามตามปกติต่อไป',
-    vi: 'Trẻ phát triển tốt trong tất cả các lĩnh vực. Tiếp tục theo dõi định kỳ.',
-    fil: 'Ang bata ay umuunlad nang maayos sa lahat ng domain. Ipagpatuloy ang regular na pagmamatyag.',
-  },
-  adhd_learning: {
-    id: 'Terdeteksi corak perhatian dan/atau hyperactivity. Pertimbangkan penilaian ADHD lanjut dan sokongan pembelajaran.',
-    en: 'Attention and/or hyperactivity patterns detected. Consider further ADHD assessment and learning support.',
-    ms: 'Corak perhatian dan/atau hiperaktiviti dikesan. Pertimbangkan penilaian ADHD lanjut dan sokongan pembelajaran.',
-    th: 'พบรูปแบบด้านความสนใจและ/หรือ hyperactivity ควรพิจารณาการประเมิน ADHD เพิ่มเติมและการสนับสนุนการเรียนรู้',
-    vi: 'Phát hiện các mẫu về chú ý và/hoặc tăng động. Cân nhắc đánh giá ADHD thêm và hỗ trợ học tập.',
-    fil: 'Nakita ang mga pattern ng pansin at/o hyperaktibidad. Isaalang-alang ang karagdagang pagtatasa sa ADHD at suporta sa pag-aaral.',
-  },
-  asd_spectrum: {
-    id: 'Terdeteksi corak sosial dan/atau deria. Pertimbangkan penilaianASD lanjut dan sokongan perkembangan.',
-    en: 'Social and/or sensory patterns detected. Consider further ASD assessment and developmental support.',
-    ms: 'Corak sosial dan/atau deria dikesan. Pertimbangkan penilaian ASD lanjut dan sokongan perkembangan.',
-    th: 'พบรูปแบบทางสังคมและ/หรือประสาทสัมผัส ควรพิจารณาการประเมิน ASD เพิ่มเติมและการสนับสนุนการพัฒนา',
-    vi: 'Phát hiện các mẫu về xã hội và/hoặc giác quan. Cân nhắc đánh giá ASD thêm và hỗ trợ phát triển.',
-    fil: 'Nakita ang mga panlipunang at/o sensory na pattern. Isaalang-alang ang karagdagang pagtatasa sa ASD at suporta sa pag-unlad.',
-  },
-  mixed_both: {
-    id: 'Corak ADHD dan ASD kedua-duanya dikenal pasti. Penilaian komprehensif oleh profesional disyorkan.',
-    en: 'Both ADHD and ASD patterns identified. Comprehensive assessment by a professional is recommended.',
-    ms: 'Kedua-dua corak ADHD dan ASD dikenal pasti. Penilaian komprehensif oleh profesional disyorkan.',
-    th: 'พบทั้งรูปแบบ ADHD และ ASD ควรได้รับการประเมินอย่างครอบคลุมโดยผู้เชี่ยวชาญ',
-    vi: 'Cả hai mẫu ADHD và ASD đều được xác định. Đánh giá toàn diện bởi chuyên gia được khuyến nghị.',
-    fil: 'Nakita ang parehong ADHD at ASD pattern. Inirerekomenda ang komprehensibong pagtatasa ng propesyonal.',
-  },
-  high_concern: {
-    id: 'Skor tinggi dalam satu atau lebih domain bersama-sama dengan masalah pembelajaran dikesan. Penilaian segera oleh profesional disyorkan.',
-    en: 'High scores in one or more domains alongside learning difficulties detected. Immediate professional assessment recommended.',
-    ms: 'Skor tinggi dalam satu atau lebih domain bersama-sama dengan masalah pembelajaran dikesan. Penilaian segera oleh profesional disyorkan.',
-    th: 'พบคะแนนสูงในหนึ่งหรือหลายโดเมนร่วมกับความยากลำบากในการเรียนรู้ ควรได้รับการประเมินโดยผู้เชี่ยวชาญทันที',
-    vi: 'Điểm cao trong một hoặc nhiều lĩnh vực cùng với khó khăn học tập được phát hiện. Đánh giá ngay lập tức bởi chuyên gia được khuyến nghị.',
-    fil: 'Mataas na mga score sa isa o higit pang mga domain kasama ng mga paghihirap sa pag-aaral. Inirerekomenda ang agarang pagtatasa ng propesyonal.',
-  },
-};
+function pct(score: number, max: number): number {
+  return max > 0 ? Math.round((score / max) * 100) : 0;
+}
 
-// ─── Helper: level from score + config ───────────────────────────────────────
-
-function computeLevel(
-  score: number,
-  cfg: DomainConfig,
-  answers: number[],
-  questionIndices: number[]
-): DomainLevel {
-  // "Often floor": 4+ answers of value 3 in this domain → High (ADHD auto-flag)
-  if (cfg.oftenFloor !== undefined) {
-    const oftenCount = questionIndices.filter(
-      (idx) => answers[idx] === 3
-    ).length;
-    if (oftenCount >= cfg.oftenFloor) return 'high';
-  }
-
-  // "all N questions scored ≥2" override (e.g. Domain C: all 3 ≥2 → High)
-  if (cfg.minPerQuestion !== undefined) {
-    const allMin = questionIndices.every((idx) => answers[idx] >= cfg.minPerQuestion!);
-    if (allMin) return 'high';
-  }
-
-  // Score-based thresholds: High if > moderateThreshold, Moderate if > lowThreshold
-  if (score > cfg.moderateThreshold) return 'high';
-  if (score > cfg.lowThreshold) return 'moderate';
+function levelFromPct(p: number): DomainLevel {
+  if (p >= 70) return 'high';
+  if (p >= 40) return 'moderate';
   return 'low';
 }
 
-// ─── Core calculation ─────────────────────────────────────────────────────────
+// ─── Recommendations ──────────────────────────────────────────────────────────
 
-/**
- * Calculate domain scores and overall risk from an array of 20 answers.
- *
- * @param answers  Array of 20 values, index 0 = Q1, index 19 = Q20.
- *                 Each value must be 0 (Never), 1 (Rarely), 2 (Sometimes), or 3 (Often).
- * @param lang     Language key for returned text (default 'en').
- * @returns ScoreResult with domainScores, overallRisk, and recommendation.
- */
+const REC: Record<OverallClassification, Record<string, string>> = {
+  low_overall: {
+    id: 'Anak berkembang dengan baik. Teruskan pemantauan berkala dan rangsangan perkembangan di rumah.',
+    en: 'Child is developing well. Continue routine monitoring and provide stimulating home activities.',
+    ms: 'Kanak-kanak berkembang dengan baik. Teruskan pemantauan berkala.',
+    th: 'เด็กพัฒนาได้ดี ควรติดตามตามปกติและให้กิจกรรมกระตุ้นพัฒนาการที่บ้าน',
+    vi: 'Trẻ phát triển tốt. Tiếp tục theo dõi định kỳ.',
+    fil: 'Ang bata ay umuunlad nang maayos. Ipagpatuloy ang regular na pagmamatyag.',
+  },
+  moderate_adhd: {
+    id: 'Terdeteksi corak attention dan hyperactivity. Berkonsultasilah dengan pediatrician dan pertimbangkan penilaian ADHD lanjut.',
+    en: 'Attention and hyperactivity patterns detected. Please consult a pediatrician and consider further ADHD assessment.',
+    ms: 'Corak perhatian dan hiperaktiviti dikesan. Sila berjumpa pediatrician.',
+    th: 'พบรูปแบบด้านความสนใจและ hyperactivity กรุณาปรึกษาแพทย์เด็ก',
+    vi: 'Phát hiện các mẫu về chú ý và tăng động. Vui lòng tham khảo ý kiến bác sĩ nhi.',
+    fil: 'Nakita ang mga pattern ng pansin at hyperaktibidad. Mangyaring kumonsulta sa pediatrician.',
+  },
+  moderate_asd: {
+    id: 'Terdeteksi corak sosial dan/atau sensori. Berkonsultasilah dengan developmental pediatrician atau psikolog.',
+    en: 'Social and/or sensory patterns detected. Please consult a developmental pediatrician or psychologist.',
+    ms: 'Corak sosial dan/atau deria dikesan. Sila berjumpa pediatrician perkembangan atau psikolog.',
+    th: 'พบรูปแบบทางสังคมและ/หรือประสาทสัมผัส กรุณาปรึกษาแพทย์เด็กเฉพาะทาง',
+    vi: 'Phát hiện các mẫu về xã hội và/hoặc giác quan. Vui lòng tham khảo bác sĩ nhi khoa phát triển.',
+    fil: 'Nakita ang mga panlipunan at/o sensory na pattern. Mangyaring kumonsulta sa developmental pediatrician.',
+  },
+  mixed_moderate: {
+    id: 'Terdeteksi corak ADHD dan ASD. Penilaian komprehensif oleh profesional disyorkan.',
+    en: 'Both ADHD and ASD patterns identified. Comprehensive professional assessment is recommended.',
+    ms: 'Kedua-dua corak ADHD dan ASD dikenal pasti. Penilaian komprehensif disyorkan.',
+    th: 'พบทั้งรูปแบบ ADHD และ ASD ควรได้รับการประเมินอย่างครอบคลามโดยผู้เชี่ยวชาญ',
+    vi: 'Cả hai mẫu ADHD và ASD đều được xác định. Đánh giá toàn diện được khuyến nghị.',
+    fil: 'Nakita ang parehong ADHD at ASD pattern. Inirerekomenda ang komprehensibong pagtatasa.',
+  },
+  high_adhd: {
+    id: 'Skor tinggi dalam domain ADHD dikesan. Penilaian segera oleh spesialis perkembangan anak disyorkan.',
+    en: 'High ADHD domain scores detected. Prompt assessment by a child development specialist is recommended.',
+    ms: 'Skor tinggi dalam domain ADHD dikesan. Penilaian segera disyorkan.',
+    th: 'พบคะแนนสูงใน domain ADHD ควรได้รับการประเมินโดยเร็ว',
+    vi: 'Phát hiện điểm cao trong domain ADHD. Đánh giá ngay lập tức được khuyến nghị.',
+    fil: 'Nakita ang mataas na score sa ADHD domain. Inirerekomenda ang agarang pagtatasa.',
+  },
+  high_asd: {
+    id: 'Skor tinggi dalam domain ASD dikesan. Penilaian segera oleh spesialis perkembangan anak disyorkan.',
+    en: 'High ASD domain scores detected. Prompt assessment by a child development specialist is recommended.',
+    ms: 'Skor tinggi dalam domain ASD dikesan. Penilaian segera disyorkan.',
+    th: 'พบคะแนนสูงใน domain ASD ควรได้รับการประเมินโดยเร็ว',
+    vi: 'Phát hiện điểm cao trong domain ASD. Đánh giá ngay lập tức được khuyến nghị.',
+    fil: 'Nakita ang mataas na score sa ASD domain. Inirerekomenda ang agarang pagtatasa.',
+  },
+  mixed_high: {
+    id: 'Skor tinggi dalam domain ADHD dan ASD dikesan. Penilaian segera dan menyeluruh disyorkan.',
+    en: 'High scores in both ADHD and ASD domains detected. Prompt and comprehensive assessment is recommended.',
+    ms: 'Skor tinggi dalam domain ADHD dan ASD dikesan. Penilaian segera disyorkan.',
+    th: 'พบคะแนนสูงใน domain ADHD dan ASD ควรได้รับการประเมินโดยเร็ว',
+    vi: 'Phát hiện điểm cao trong cả domain ADHD và ASD. Đánh giá ngay lập tức được khuyến nghị.',
+    fil: 'Nakita ang mataas na score sa parehong ADHD at ASD domain. Inirerekomenda ang agarang pagtatasa.',
+  },
+  urgent_concern: {
+    id: 'Terdapat petunjuk perkembangan yang serius. Penilaian segera oleh spesialis perkembangan anak adalah sangat disyorkan.',
+    en: 'Significant developmental indicators detected. Immediate evaluation by a child development specialist is strongly recommended.',
+    ms: 'Penunjuk perkembangan yang signifikan dikesan. Penilaian segera sangat disyorkan.',
+    th: 'พบตัวบ่งชี้พัฒนาการที่สำคัญ การประเมินโดยผู้เชี่ยวชาญเป็นสิ่งจำเป็นอย่างยิ่ง',
+    vi: 'Phát hiện các chỉ dấu phát triển đáng kể. Đánh giá ngay lập tức là rất cần thiết.',
+    fil: 'Nakita ang mga importante sa pag-unlad na indicator. Ang agarang pagtatasa ay lubos na inirerekomenda.',
+  },
+};
+
+const SPEC: Record<OverallClassification, Record<string, string>> = {
+  low_overall: { id: 'Pediatrician umum', en: 'General pediatrician', ms: 'Pediatrician umum', th: 'แพทย์เด็กทั่วไป', vi: 'Bác sĩ nhi khoa tổng quát', fil: 'General pediatrician' },
+  moderate_adhd: { id: 'Spesialis ADHD anak, Psikolog klinis', en: 'Child ADHD specialist, Clinical psychologist', ms: 'Spesialis ADHD, Psikolog klinikal', th: 'ผู้เชี่ยวชาญ ADHD เด็ก, นักจิตวิทยาคลินิก', vi: 'Chuyên gia ADHD trẻ em, Nhà tâm lý lâm sàng', fil: 'Child ADHD specialist, Clinical psychologist' },
+  moderate_asd: { id: 'Spesialis perkembangan anak, Psikolog klinis', en: 'Developmental pediatrician, Clinical psychologist', ms: 'Pediatrician perkembangan, Psikolog klinikal', th: 'แพทย์เด็กเฉพาะทางพัฒนาการ, นักจิตวิทยาคลินิก', vi: 'Bác sĩ nhi khoa phát triển, Nhà tâm lý lâm sàng', fil: 'Developmental pediatrician, Clinical psychologist' },
+  mixed_moderate: { id: 'Spesialis perkembangan anak, Psikolog klinis, Terapis okupasi', en: 'Developmental pediatrician, Clinical psychologist, Occupational therapist', ms: 'Pediatrician perkembangan, Psikolog klinikal, Terapis okupasi', th: 'แพทย์เด็กเฉพาะทาง, นักจิตวิทยาคลินิก, นักกิจวรรยะ', vi: 'Bác sĩ nhi khoa phát triển, Nhà tâm lý lâm sàng, Chuyên gia trị liệu nghề nghiệp', fil: 'Developmental pediatrician, Clinical psychologist, Occupational therapist' },
+  high_adhd: { id: 'Spesialis ADHD anak, Psikolog klinis, Terapis perilaku', en: 'Child ADHD specialist, Clinical psychologist, Behavior therapist', ms: 'Spesialis ADHD, Psikolog klinikal, Terapis perilaku', th: 'ผู้เชี่ยวชาญ ADHD เด็ก, นักจิตวิทยาคลินิก, นักบำบัดพฤติกรรม', vi: 'Chuyên gia ADHD trẻ em, Nhà tâm lý lâm sàng, Chuyên gia trị liệu hành vi', fil: 'Child ADHD specialist, Clinical psychologist, Behavior therapist' },
+  high_asd: { id: 'Spesialis perkembangan anak, Psikolog klinis, Terapis okupasi', en: 'Developmental pediatrician, Clinical psychologist, Occupational therapist', ms: 'Pediatrician perkembangan, Psikolog klinikal, Terapis okupasi', th: 'แพทย์เด็กเฉพาะทางพัฒนาการ, นักจิตวิทยาคลินิก, นักกิจวรรยะ', vi: 'Bác sĩ nhi khoa phát triển, Nhà tâm lý lâm sàng, Chuyên gia trị liệu nghề nghiệp', fil: 'Developmental pediatrician, Clinical psychologist, Occupational therapist' },
+  mixed_high: { id: 'Spesialis perkembangan anak, Psikolog klinis, Terapis perilaku, Terapis okupasi', en: 'Developmental pediatrician, Clinical psychologist, Behavior therapist, Occupational therapist', ms: 'Pediatrician perkembangan, Psikolog klinikal, Terapis perilaku, Terapis okupasi', th: 'แพทย์เด็กเฉพาะทาง, นักจิตวิทยาคลินิก, นักบำบัดพฤติกรรม, นักกิจวรรยะ', vi: 'Bác sĩ nhi khoa phát triển, Nhà tâm lý lâm sàng, Chuyên gia trị liệu hành vi, Chuyên gia trị liệu nghề nghiệp', fil: 'Developmental pediatrician, Clinical psychologist, Behavior therapist, Occupational therapist' },
+  urgent_concern: { id: 'Klinik perkembangan anak (RSUD/RSUP), Psikolog klinis, Terapis perilaku', en: 'Child development clinic (hospital), Clinical psychologist, Behavior therapist', ms: 'Klinik perkembangan anak, Psikolog klinikal, Terapis perilaku', th: 'คลินิกพัฒนาการเด็ก, นักจิตวิทยาคลินิก, นักบำบัดพฤติกรรม', vi: 'Phòng khám phát triển trẻ em, Nhà tâm lý lâm sàng, Chuyên gia trị liệu hành vi', fil: 'Child development clinic, Clinical psychologist, Behavior therapist' },
+};
+
+// ─── AI Observation generator ──────────────────────────────────────────────────
+
+const OBS: Record<string, Record<string, string>> = {
+  eyeEngagement: { id: 'Penglibatan mata semasa interaksi sosial memerlukan perhatian lanjut.', en: 'Eye engagement during social interactions requires further observation.', ms: 'Penglibatan mata semasa interaksi sosial memerlukan perhatian.', th: 'การมีส่วนร่วมของดวงตาในการโต้ตอบทางสังคมต้องการความสนใจ.', vi: 'Sự tham gia của mắt trong các tương tác xã hội cần được theo dõi.', fil: 'Ang pakikilahok ng mata sa sosyal na interaksiyon ay nangangailangan ng karagdagang obserbasyon.' },
+  repetitiveBehavior: { id: 'Corak perilaku berulang dikesan — ini mungkin sebahagian perkembangan biasa tetapi wajar dipantau.', en: 'Repetitive behavior patterns detected — may be part of typical development but warrants monitoring.', ms: 'Corak perilaku berulang dikesan — mungkin perkembangan biasa.', th: 'พบรูปแบบพฤติกรรมซ้ำ — อาจเป็นส่วนหนึ่งของการพัฒนาปกติ.', vi: 'Phát hiện các mẫu hành vi lặp lại — có thể là một phần của sự phát triển điển hình.', fil: 'Nakita ang mga repetitive na pattern ng pag-uugali — maaaring bahagi ng typical na pag-unlad.' },
+  movement: { id: 'Perilaku pergerakan menunjukkan aktiviti yang tinggi dalam beberapa situasi.', en: 'Movement patterns show elevated activity levels in several observed situations.', ms: 'Pergerakan menunjukkan aktiviti tinggi dalam beberapa situasi.', th: 'รูปแบบการเคลื่อนไหวแสดงระดับกิจกรรมที่สูงในบางสถานการณ์.', vi: 'Các mẫu chuyển động cho thấy mức hoạt động cao trong một số tình huống.', fil: 'Ang mga pattern ng paggalaw ay nagpapakita ng mataas na antas ng aktibidad sa ilang sitwasyon.' },
+  attentionInstability: { id: 'Ketidakstabilan perhatian diperhatikan — ini perlu dipantau dari masa ke masa.', en: 'Attention instability was observed — this warrants ongoing monitoring over time.', ms: 'Ketidakstabilan perhatian diperhatikan.', th: 'พบความแปรปรวนของความสนใจ.', vi: 'Phát hiện sự không ổn định của sự tập trung.', fil: 'May namamagitan na pagbabago sa pansin na nararapat na obserbahan.' },
+  socialResponse: { id: 'Tindak balas sosial menunjukkan perkembangan yang bersesuaian dengan usia.', en: 'Social response appears age-appropriate in observed interactions.', ms: 'Tindak balas sosial kelihatan bersesuaian usia.', th: 'การตอบสนองทางสังคมดูเหมาะสมกับวัย.', vi: 'Phản ứng xã hội dường như phù hợp với độ tuổi.', fil: 'Ang sosyal na pagtugon ay tila naaangkop sa edad.' },
+  speechDelay: { id: 'Sejarah kelembapan pertuturan dikenal pasti — ini adalah faktor yang wajar dipantau.', en: 'Speech delay history noted — this is a factor worth monitoring.', ms: 'Sejarah kelembapan pertuturan dikenal pasti.', th: 'มีประวัติความล่าช้าทางภาษา.', vi: 'Tiền sử chậm nói được ghi nhận.', fil: 'Ang kasaysayan ng speech delay ay na-note.' },
+  familyHistory: { id: 'Sejarah keluarga ADHD/ASD dikenal pasti — pemerhatian lanjut disyorkan.', en: 'Family history of ADHD/ASD noted — further observation is recommended.', ms: 'Sejarah keluarga ADHD/ASD dicatatkan.', th: 'มีประวัติครอบครัว ADHD/ASD.', vi: 'Tiền sử gia đình ADHD/ASD được ghi nhận.', fil: 'May na-note na kasaysayan ng pamilya sa ADHD/ASD.' },
+  learningDev: { id: 'Perkembangan pembelajaran berada dalam lingkungan biasa.', en: 'Learning development appears within typical range.', ms: 'Perkembangan pembelajaran dalam lingkungan biasa.', th: 'การพัฒนาการเรียนรู้อยู่ในระดับปกติ.', vi: 'Sự phát triển học tập có vẻ trong phạm vi điển hình.', fil: 'Ang pag-unlad sa pag-aaral ay tila nasa loob ng typical na saklaw.' },
+  eyeEngagementOk: { id: 'Kekerapan kontak mata kelihatan bersesuaian dengan usia dalam interaksi yang diperhatikan.', en: 'Eye contact frequency appears age-appropriate during observed interactions.', ms: 'Kontak mata kelihatan bersesuaian usia.', th: 'ความถี่การสบตาดูเหมาะสมกับวัย.', vi: 'Tần suất liên lạc bằng mắt có vẻ phù hợp với độ tuổi.', fil: 'Ang frequency ng contact sa mata ay tila naaangkop sa edad.' },
+  activityModulation: { id: 'Transisi aktiviti diperhatikan dengan modulasi yang bersesuaian.', en: 'Activity transitions observed with appropriate modulation.', ms: 'Transisi aktiviti dengan modulasi bersesuaian.', th: 'การเปลี่ยนถ่ายกิจกรรมด้วยการปรับตัวที่เหมาะสม.', vi: 'Các chuyển đổi hoạt động được quan sát với sự điều biến phù hợp.', fil: 'Ang mga transisyon ng aktibidad ay na-obserbahan na may angkop na modulation.' },
+};
+
+function tObs(key: string, lang: string): string {
+  const lk = lang in OBS.eyeEngagement ? lang : 'en';
+  return OBS[key]?.[lk] ?? OBS[key]?.['en'] ?? OBS[key]?.['id'] ?? '';
+}
+
+// ─── Video simulation ──────────────────────────────────────────────────────────
+
+export function simulateVideoAnalysis(
+  adhdQuestionnairePct: number,
+  asdQuestionnairePct: number
+): VideoAnalysisResult {
+  const seed = (adhdQuestionnairePct * 7 + asdQuestionnairePct * 13) % 100;
+  const seededRandom = (n: number) => ((seed * 9301 + 49297) % 233280) / 233280 * n;
+  const clamp = (v: number) => Math.max(0, Math.min(100, Math.round(v)));
+
+  const baseAdhd = adhdQuestionnairePct > 39 ? clamp(adhdQuestionnairePct + seededRandom(15)) : clamp(adhdQuestionnairePct * 0.4);
+  const baseAsd = asdQuestionnairePct > 39 ? clamp(asdQuestionnairePct + seededRandom(15)) : clamp(asdQuestionnairePct * 0.4);
+
+  const adhdObs: string[] = baseAdhd >= 40
+    ? [tObs('movement', 'en'), tObs('attentionInstability', 'en')]
+    : [tObs('activityModulation', 'en')];
+
+  const asdObs: string[] = baseAsd >= 40
+    ? [tObs('eyeEngagement', 'en'), tObs('repetitiveBehavior', 'en')]
+    : [tObs('eyeEngagementOk', 'en')];
+
+  return { adhdScore: baseAdhd, asdScore: baseAsd, adhdObservations: adhdObs, asdObservations: asdObs };
+}
+
+// ─── Core calculation ──────────────────────────────────────────────────────────
+
 export function calculateScores(
   answers: number[],
-  lang: string = 'en'
+  lang: string = 'en',
+  childProfile: ChildProfile | null = null
 ): ScoreResult {
   if (answers.length !== 20) {
-    throw new Error(
-      `Expected 20 answers, got ${answers.length}. ` +
-        'Provide an array of exactly 20 numeric values (0-3).'
-    );
+    throw new Error(`Expected 20 answers, got ${answers.length}.`);
   }
 
-  const langKey = lang in RECOMMENDATIONS.low_overall ? lang : 'en';
+  const lk = lang in REC.low_overall ? lang : 'en';
 
+  // Domain scores
   const domainScores: DomainScore[] = DOMAIN_CONFIGS.map((cfg) => {
-    const questionIndices = cfg.questionIds.map((id) => id - 1); // convert to 0-based
-    const score = questionIndices.reduce((sum, idx) => sum + (answers[idx] ?? 0), 0);
-    const level = computeLevel(score, cfg, answers, questionIndices);
-
+    const qi = cfg.questionIds.map(id => id - 1);
+    const score = qi.reduce((s, i) => s + (answers[i] ?? 0), 0);
+    const percentage = pct(score, cfg.maxScore);
     return {
       domain: cfg.id,
-      domainName: cfg.name[langKey] ?? cfg.name['en'],
+      domainName: cfg.name[lk] ?? cfg.name['en'],
       score,
       maxScore: cfg.maxScore,
-      level,
-      questionIndices,
+      percentage,
+      level: levelFromPct(percentage),
+      questionIndices: qi,
     };
   });
 
-  const domainA = domainScores.find((d) => d.domain === 'A')!;
-  const domainB = domainScores.find((d) => d.domain === 'B')!;
-  const domainC = domainScores.find((d) => d.domain === 'C')!;
-  const domainD = domainScores.find((d) => d.domain === 'D')!;
+  const dA = domainScores.find(d => d.domain === 'A')!;
+  const dB = domainScores.find(d => d.domain === 'B')!;
+  const dC = domainScores.find(d => d.domain === 'C')!;
+  const dD = domainScores.find(d => d.domain === 'D')!;
+  const dE = domainScores.find(d => d.domain === 'E')!;
 
-  const adhdElevated =
-    domainA.level === 'high' || domainA.level === 'moderate' ||
-    domainB.level === 'high' || domainB.level === 'moderate';
+  const overallAdhdPct = Math.round((dA.percentage + dB.percentage) / 2);
+  const overallAsdPct = Math.round((dC.percentage + dD.percentage) / 2);
 
-  const asdElevated =
-    domainC.level === 'high' || domainC.level === 'moderate';
+  // Video simulation
+  const video = simulateVideoAnalysis(overallAdhdPct, overallAsdPct);
+
+  // Final combined scores
+  const finalAdhdPct = Math.round(overallAdhdPct * 0.8 + video.adhdScore * 0.2);
+  const finalAsdPct = Math.round(overallAsdPct * 0.8 + video.asdScore * 0.2);
 
   const devScore = answers[19]; // Q20
 
-  // High score in any domain + developmental delay → highest-priority concern
-  const highWithDev =
-    (domainA.level === 'high' || domainB.level === 'high' || domainC.level === 'high') &&
-    devScore >= 2;
-
-  let overallRisk: OverallRisk;
-  let recommendationKey: string;
-
-  // Rule 1 — all domains low
-  if (
-    domainA.level === 'low' &&
-    domainB.level === 'low' &&
-    domainC.level === 'low' &&
-    domainD.level === 'low'
-  ) {
-    overallRisk = 'low_overall';
-    recommendationKey = 'low_overall';
-  }
-  // Rule 2 — ADHD/learning elevated, ASD absent (but not high_concern)
-  else if (
-    (domainA.level !== 'low' || domainB.level !== 'low') &&
-    domainC.level === 'low' &&
-    !highWithDev
-  ) {
-    overallRisk = 'adhd_learning';
-    recommendationKey = 'adhd_learning';
-  }
-  // Rule 3 — ASD elevated, ADHD absent (and not captured by high_concern)
-  else if (
-    domainC.level !== 'low' &&
-    domainA.level === 'low' &&
-    domainB.level === 'low' &&
-    !(domainC.level === 'high' && devScore >= 2)
-  ) {
-    overallRisk = 'asd_spectrum';
-    recommendationKey = 'asd_spectrum';
-  }
-  // Rule 4 — high score anywhere + developmental delay → high_concern (HIGHEST priority)
-  else if (
-    (domainA.level === 'high' || domainB.level === 'high' || domainC.level === 'high') &&
-    devScore >= 2
-  ) {
-    overallRisk = 'high_concern';
-    recommendationKey = 'high_concern';
-  }
-  // Rule 5 — both ADHD and ASD elevated (but not high_concern)
-  else if (adhdElevated && asdElevated) {
-    overallRisk = 'mixed_both';
-    recommendationKey = 'mixed_both';
-  }
-  else {
-    // Fallback: classify by dominant elevated domain
-    if (asdElevated && !adhdElevated) {
-      overallRisk = 'asd_spectrum';
-      recommendationKey = 'asd_spectrum';
-    } else if (adhdElevated && !asdElevated) {
-      overallRisk = 'adhd_learning';
-      recommendationKey = 'adhd_learning';
-    } else {
-      overallRisk = 'low_overall';
-      recommendationKey = 'low_overall';
-    }
+  // Classification (per spec)
+  let overallClassification: OverallClassification;
+  if (devScore >= 2 && (finalAdhdPct >= 70 || finalAsdPct >= 70)) {
+    overallClassification = 'urgent_concern';
+  } else if (finalAdhdPct >= 70 && finalAsdPct >= 70) {
+    overallClassification = 'mixed_high';
+  } else if (finalAdhdPct >= 70) {
+    overallClassification = 'high_adhd';
+  } else if (finalAsdPct >= 70) {
+    overallClassification = 'high_asd';
+  } else if (finalAdhdPct >= 40 && finalAsdPct >= 40) {
+    overallClassification = 'mixed_moderate';
+  } else if (finalAdhdPct >= 40) {
+    overallClassification = 'moderate_adhd';
+  } else if (finalAsdPct >= 40) {
+    overallClassification = 'moderate_asd';
+  } else {
+    overallClassification = 'low_overall';
   }
 
-  const recommendationText =
-    RECOMMENDATIONS[overallRisk][langKey] ?? RECOMMENDATIONS[overallRisk]['en'];
+  // AI Observations
+  const aiObservations: AIObservation[] = [];
+
+  if (dC.percentage >= 40) aiObservations.push({ category: 'Eye Engagement', icon: '👁️', observation: tObs('eyeEngagement', lk) });
+  if (dD.percentage >= 40) aiObservations.push({ category: 'Repetitive Behavior', icon: '🔄', observation: tObs('repetitiveBehavior', lk) });
+  if (dB.percentage >= 40) aiObservations.push({ category: 'Movement Patterns', icon: '🏃', observation: tObs('movement', lk) });
+  if (dA.percentage >= 40) aiObservations.push({ category: 'Attention Stability', icon: '🎯', observation: tObs('attentionInstability', lk) });
+  if (dC.percentage < 40) aiObservations.push({ category: 'Social Response', icon: '💬', observation: tObs('socialResponse', lk) });
+  if (childProfile?.speechDelay === 'yes' || childProfile?.speechDelay === 'unsure') aiObservations.push({ category: 'Speech Development', icon: '🗣️', observation: tObs('speechDelay', lk) });
+  if (childProfile?.familyHistory === 'yes' || childProfile?.familyHistory === 'unsure') aiObservations.push({ category: 'Family History', icon: '👨‍👩‍👧', observation: tObs('familyHistory', lk) });
+  if (dE.percentage < 67) aiObservations.push({ category: 'Learning Development', icon: '📚', observation: tObs('learningDev', lk) });
 
   return {
     domainScores,
-    overallRisk,
-    recommendationKey,
-    recommendationText,
+    adhdInattentionPct: dA.percentage,
+    adhdHyperactivityPct: dB.percentage,
+    asdSocialPct: dC.percentage,
+    asdSensoryPct: dD.percentage,
+    generalDevPct: dE.percentage,
+    overallAdhdPct,
+    overallAsdPct,
+    finalAdhdPct,
+    finalAsdPct,
+    overallClassification,
+    recommendationKey: overallClassification,
+    recommendationText: REC[overallClassification][lk] ?? REC[overallClassification]['en'],
+    specialistsText: SPEC[overallClassification][lk] ?? SPEC[overallClassification]['en'],
+    aiObservations,
     devScore,
+    childProfile,
+    videoAnalysis: video,
   };
-}
-
-// ─── Utility: interpret a single answer ──────────────────────────────────────
-
-/** Convert a raw answer value (0-3) to its label string */
-export function answerLabel(value: number, lang: string = 'en'): string {
-  return ANSWER_LABELS[value] ?? 'Unknown';
-}
-
-/** Returns the point value for a given answer label */
-export function answerValue(label: string): number {
-  const idx = ANSWER_LABELS.indexOf(label as typeof ANSWER_LABELS[number]);
-  return idx === -1 ? -1 : idx;
 }

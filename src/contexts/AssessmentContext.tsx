@@ -34,6 +34,8 @@ export interface VideoUpload {
   file: File | null;
   progress: number; // 0–100
   previewUrl: string | null;
+  /** Video type: ADHD behavioral or ASD behavioral */
+  type: 'adhd' | 'asd' | null;
 }
 
 export interface Insight {
@@ -72,7 +74,7 @@ const initialState: AssessmentState = {
   currentStep: 1,
   selectedChild: null,
   qaPairs: [],
-  video: { file: null, progress: 0, previewUrl: null },
+  video: { file: null, progress: 0, previewUrl: null, type: null },
   riskLevel: 'medium',
   insights: [],
   isComplete: false,
